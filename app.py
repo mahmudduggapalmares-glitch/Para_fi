@@ -1,170 +1,160 @@
+import streamlit as st
+import streamlit.components.v1 as components
+
+# Configuración de la página para que se vea bien en móviles y PC
+st.set_page_config(page_title="Para el amor de mi vida", layout="wide", initial_sidebar_state="collapsed")
+
+# Inyectamos el CSS directamente para limpiar la interfaz de Streamlit
+st.markdown("""
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    body { background-color: #000000; }
+    .stApp { background-color: #000000; }
+    </style>
+""", unsafe_allow_html=True)
+
+# El bloque de HTML, CSS y JS todo en uno
+html_final = """
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Para Ti</title>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #050505;
-            font-family: 'Georgia', serif;
-            color: white;
-        }
-
-        /* Fondo de vacío con estrellas */
-        #canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 0;
-        }
-
-        .container {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            text-align: center;
-            background: radial-gradient(circle, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%);
-        }
-
-        .letter-content {
-            max-width: 600px;
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Georgia', serif; color: white; }
+        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
+        .main-container {
+            position: relative; z-index: 10;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            height: 100vh; text-align: center;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(5px);
-            border-radius: 15px;
-            animation: fadeIn 5s ease-in;
+            background: radial-gradient(circle, rgba(0,0,0,0) 30%, rgba(0,0,0,0.8) 100%);
         }
-
-        h1 { font-weight: lighter; letter-spacing: 5px; opacity: 0.8; }
-        p { line-height: 1.6; font-size: 1.1rem; color: #ddd; }
-
-        /* Estrellas con notas (Interactivas) */
-        .star-note {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: white;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 10px white;
+        .poem-box { 
+            animation: fadeIn 5s ease-in; 
+            max-width: 600px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        h1 { font-weight: 100; letter-spacing: 6px; margin-bottom: 20px; }
+        p { font-style: italic; line-height: 1.8; font-size: 1.1rem; color: #ccc; }
+        
+        .star-clickable {
+            position: absolute; width: 4px; height: 4px; background: white;
+            border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px #fff;
             transition: transform 0.3s;
         }
+        .star-clickable:hover { transform: scale(3); }
 
-        .star-note:hover { transform: scale(2); }
-
-        /* Música oculta (YouTube) */
-        #music-container {
-            position: fixed;
-            bottom: -100px;
+        #toast {
+            position: fixed; bottom: 10%; left: 50%; transform: translateX(-50%);
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            padding: 15px 25px; border-radius: 30px; display: none;
+            z-index: 100; font-size: 0.9rem; border: 0.5px solid rgba(255,255,255,0.2);
         }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .hidden-message {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.9);
-            padding: 20px;
-            border: 1px solid #444;
-            display: none;
-            z-index: 10;
-        }
     </style>
 </head>
 <body>
-
-    <canvas id="canvas"></canvas>
-
-    <div class="container">
-        <div class="letter-content">
+    <canvas id="starCanvas"></canvas>
+    
+    <div class="main-container">
+        <div class="poem-box">
             <h1>Perdóname</h1>
-            <p><i>"Fui un tonto por romper lo más puro que tenía..."</i></p>
-            <br>
             <p>
-                Te extraño en el silencio de cada noche. Extraño ese pasado donde éramos uno solo, 
-                donde el mundo no importaba porque te tenía a mi lado. Me duele saber que fui yo 
-                quien dañó este camino, y daría lo que fuera por volver a verte sonreír sin miedos.
+                Éramos dos almas bailando en la oscuridad,<br>
+                y yo, en mi ceguera, solté tu mano.<br>
+                Extraño el eco de tu voz y la paz de tu mirada,<br>
+                fui un tonto al romper el cristal de lo humano.
             </p>
-            <p>Te amo, más allá del tiempo y del error.</p>
+            <p style="font-size: 0.8rem; margin-top: 30px; opacity: 0.6;">
+                (Hay mensajes ocultos en las estrellas que brillan más...)
+            </p>
         </div>
     </div>
 
-    <div id="music-container">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/soRmpPJOIwo?autoplay=1&loop=1&playlist=soRmpPJOIwo" frameborder="0" allow="autoplay"></iframe>
-    </div>
+    <div id="toast"></div>
 
-    <div id="msg-box" class="hidden-message"></div>
+    <iframe style="display:none" width="0" height="0" 
+        src="https://www.youtube.com/embed/soRmpPJOIwo?autoplay=1&loop=1&playlist=soRmpPJOIwo" 
+        frameborder="0" allow="autoplay">
+    </iframe>
 
     <script>
-        const canvas = document.getElementById('canvas');
+        const canvas = document.getElementById('starCanvas');
         const ctx = canvas.getContext('2d');
-        let stars = [];
-
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+        let w, h;
+        
+        function setCanvasSize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
         }
+        window.addEventListener('resize', setCanvasSize);
+        setCanvasSize();
 
-        window.addEventListener('resize', resize);
-        resize();
+        const stars = Array.from({length: 250}, () => ({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            size: Math.random() * 1.5,
+            speed: Math.random() * 0.05
+        }));
 
-        // Crear estrellas de fondo
-        for(let i = 0; i < 200; i++) {
-            stars.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                size: Math.random() * 1.5,
-                opacity: Math.random()
-            });
-        }
-
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function animate() {
+            ctx.clearRect(0,0,w,h);
+            ctx.fillStyle = "white";
             stars.forEach(s => {
-                ctx.fillStyle = `rgba(255, 255, 255, ${s.opacity})`;
+                ctx.globalAlpha = Math.random() * 0.5 + 0.5;
                 ctx.beginPath();
-                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
                 ctx.fill();
             });
-            requestAnimationFrame(draw);
+            requestAnimationFrame(animate);
         }
-        draw();
+        animate();
 
-        // Estrellas con mensajes ocultos
-        const mensajes = [
-            "Eres el recuerdo más lindo de mi vida.",
-            "Nadie podrá ocupar tu lugar jamás.",
-            "Perdón por no saber cuidarte.",
-            "Aún guardo tu risa en mi memoria.",
-            "Te sigo amando en cada estrella que veo."
+        const frases = [
+            "Te extraño en cada silencio.",
+            "Fui un tonto por no valorar lo que teníamos.",
+            "Eres el amor de mi vida, ayer y hoy.",
+            "Daría lo que fuera por volver a verte reír.",
+            "Te amo más de lo que las palabras pueden decir."
         ];
 
-        mensajes.forEach((m, i) => {
-            let star = document.createElement('div');
-            star.className = 'star-note';
-            star.style.top = Math.random() * 80 + 10 + '%';
-            star.style.left = Math.random() * 80 + 10 + '%';
-            star.onclick = () => {
-                const box = document.getElementById('msg-box');
-                box.innerText = m;
-                box.style.display = 'block';
-                setTimeout(() => box.style.display = 'none', 3000);
+        frases.forEach(texto => {
+            const s = document.createElement('div');
+            s.className = 'star-clickable';
+            s.style.top = (Math.random() * 70 + 15) + '%';
+            s.style.left = (Math.random() * 70 + 15) + '%';
+            s.onclick = () => {
+                const t = document.getElementById('toast');
+                t.innerText = texto;
+                t.style.display = 'block';
+                setTimeout(() => t.style.display = 'none', 3000);
             };
-            document.body.appendChild(star);
+            document.body.appendChild(s);
         });
     </script>
 </body>
 </html>
+"""
+
+# Renderizamos el HTML
+components.html(html_final, height=700, scrolling=False)
+
+# Carta final debajo
+st.markdown("<div style='text-align: center; color: #888; padding: 20px;'>", unsafe_allow_html=True)
+st.write("---")
+st.write("### Mi Carta para Ti")
+st.write("""
+Escribo esto con el alma rota pero con una certeza absoluta: **Te amo**. 
+Me tomó perderte para entender que eres la luz que guiaba mis pasos. 
+Fui débil, fui tonto y dañé lo que más quería proteger. 
+
+No espero que esto lo arregle todo al instante, pero quiero que sepas que sigo aquí, 
+extrañando ese pasado juntos y deseando haber hecho las cosas de otra manera. 
+Eres el amor de mi vida.
+""")
+st.markdown("</div>", unsafe_allow_html=True)
 
